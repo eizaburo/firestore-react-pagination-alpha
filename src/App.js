@@ -5,6 +5,9 @@ import moment from 'moment';
 import { CSVLink, CSVDownload } from 'react-csv';
 import { hidden } from 'ansi-colors';
 
+import { Table, Form, FormGroup, Label, Input, Button, Pagination, PaginationItem, PaginationLink } from 'reactstrap';
+import { timingSafeEqual } from 'crypto';
+
 class App extends React.Component {
 
     state = {
@@ -20,7 +23,7 @@ class App extends React.Component {
 
     componentDidMount = async () => {
         //初期データ取得
-        this.getData();
+        await this.getData();
     }
 
     //初期データ取得用
@@ -91,6 +94,7 @@ class App extends React.Component {
 
         //何もヒットしなかったら
         if (snapshot.docs.length < 1) {
+            this.setState({ pageEnd: true });
             return null;
         }
 
@@ -212,6 +216,7 @@ class App extends React.Component {
             docs.push({
                 docId: doc.data().docId,
                 name: doc.data().name,
+                address: doc.data().address,
                 datetime: moment(doc.data().createdAt.seconds * 1000).format('YYYY-MM-DD hh:mm:ss')
             });
         })
@@ -224,21 +229,36 @@ class App extends React.Component {
     render() {
         // console.log(this.state);
         return (
-            <div>
-                <h3>Pagination sample.</h3>
-                <div style={{ margin: 20 }}>
-                    keyword:<input type="text" name="keyword" value={this.state.keyword} onChange={this.changeText} />
-                    <button onClick={this.handleSearch}>検索</button>
-                    <button onClick={this.handleReset}>リセット</button>
-                    <button onClick={this.getDownloadData} style={{ marginLeft: 30 }}>CSV Download</button>
-                    <CSVLink
-                        data={this.state.downloadItems}
-                        filename="data.csv"
-                        ref={this.csvLink}
-                        target="_blank"
-                    />
-                </div>
-                <table border="1">
+            <div className="container">
+                <h3 className="my-4">Pagination sample.</h3>
+                <Form inline className="mb-4">
+                    <FormGroup className="mb-2 mr-sm-2 mb-sm-0">
+                        <Label for="keyword" className="mr-sm-2">Keyword</Label>
+                        <Input type="text" name="keyword" id="keyword" value={this.state.keyword} onChange={this.changeText} ></Input>
+                    </FormGroup>
+                    <Button onClick={this.handleSearch} color="primary">検索</Button>
+                    <Button onClick={this.handleReset} className="ml-sm-2">リセット</Button>
+                    <Button onClick={this.getDownloadData} className="ml-sm-5" size="sm" color="info">CSV Download</Button>
+                </Form>
+                
+                <CSVLink
+                    data={this.state.downloadItems}
+                    filename="data.csv"
+                    ref={this.csvLink}
+                    target="_blank"
+                />
+
+                <Table striped>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>UID</th>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Address</th>
+                            <th>CreatedAt</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         {
                             this.state.items.map(doc => (
@@ -253,11 +273,20 @@ class App extends React.Component {
                             ))
                         }
                     </tbody>
-                </table>
-                <div style={{ display: 'flex' }}>
-                    <p style={{ margin: 20, cursor: 'pointer' }} onClick={() => this.handlePrev()}>戻る</p>
-                    <p style={{ margin: 20, cursor: 'pointer' }} onClick={() => this.handleNext()}>次へ</p>
-                </div>
+                </Table>
+
+                <Pagination>
+                    <PaginationItem className={[
+                        'mr-3',
+                        this.state.history.length <= 1 ? 'disabled' : null
+                    ].join(' ')}>
+                        <PaginationLink onClick={() => this.handlePrev()} previous />
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationLink onClick={() => this.handleNext()} next />
+                    </PaginationItem>
+                </Pagination>
+
             </div>
         );
     }
