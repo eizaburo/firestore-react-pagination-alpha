@@ -35,31 +35,27 @@ class App extends React.Component {
 
         const docs = snapshot.docs.map(doc => doc.data());
 
-        if (docs.length > 1) {
-
-            const lastVisible = docs[docs.length - 1].id;
-            const startVisible = docs[0].id;
-
-            const _history = [...this.state.history];
-            _history.push(startVisible);
-
-            this.setState({
-                items: docs,
-                lastVisible: lastVisible,
-                history: _history,
-            });
-        } else {
-            this.setState({
-                items: [],
-            });
+        //ページが無いとき何もしない
+        if (docs.length < 1) {
+            this.setState({ items: [] }); //いちおうから配列を返す（ヒット無しだから）
+            return null;
         }
+
+        const lastVisible = docs[docs.length - 1].id;
+        const startVisible = docs[0].id;
+
+        const _history = [...this.state.history];
+        _history.push(startVisible);
+
+        this.setState({
+            items: docs,
+            lastVisible: lastVisible,
+            history: _history,
+        });
+
     }
 
     getNexteData = async () => {
-
-        if (this.state.items.length < this.state.limit) {
-            return null;
-        }
 
         let nextQuery = null;
         if (this.state.keyword === '') {
@@ -79,6 +75,11 @@ class App extends React.Component {
 
         const docs = snapshot.docs.map(doc => doc.data());
 
+        //ページが無いとき何もしない
+        if (docs.length < 1) {
+            return null;
+        }
+
         const lastVisible = docs[docs.length - 1].id;
         const startVisible = docs[0].id;
 
@@ -94,6 +95,7 @@ class App extends React.Component {
 
     getPrevData = async () => {
 
+        //historyが無いと何もしない
         if (this.state.history.length <= 1) {
             return null;
         }
@@ -115,6 +117,11 @@ class App extends React.Component {
         const snapshot = await prevQuery.get();
 
         const docs = snapshot.docs.map(doc => doc.data());
+
+        //ページが無いとき何もしない
+        if (docs.length < 1) {
+            return null;
+        }
 
         const lastVisible = docs[docs.length - 1].id;
 
@@ -138,7 +145,7 @@ class App extends React.Component {
 
     changeText = (e) => {
         this.setState({ keyword: e.target.value });
-        this.setState({ history: [] });
+        this.setState({ history: [] }); //検索ワードが変化したらhistoryも一度リセット
     }
 
     handleSearch = async () => {
