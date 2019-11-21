@@ -94,7 +94,7 @@ class App extends React.Component {
 
         //何もヒットしなかったら
         if (snapshot.docs.length < 1) {
-            this.setState({ pageEnd: true });
+            alert("これ以上データが無いようです。");
             return null;
         }
 
@@ -240,7 +240,7 @@ class App extends React.Component {
                     <Button onClick={this.handleReset} className="ml-sm-2">リセット</Button>
                     <Button onClick={this.getDownloadData} className="ml-sm-5" size="sm" color="info">CSV Download</Button>
                 </Form>
-                
+
                 <CSVLink
                     data={this.state.downloadItems}
                     filename="data.csv"
