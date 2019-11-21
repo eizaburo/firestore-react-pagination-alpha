@@ -2,16 +2,21 @@ import React from 'react';
 import './App.css';
 import { db } from './Firebase';
 import moment from 'moment';
+import { CSVLink, CSVDownload } from 'react-csv';
+import { hidden } from 'ansi-colors';
 
 class App extends React.Component {
 
     state = {
         items: [], //検索結果
+        downloadItems: [],
         limit: 10, //ページ行数
         lastVisible: null, //マイページの最後の行（object）
         history: [], //ページ遷移履歴
         keyword: '', //検索キーワード
     }
+
+    csvLink = React.createRef();
 
     componentDidMount = async () => {
         //初期データ取得
@@ -185,6 +190,37 @@ class App extends React.Component {
         await this.getData();
     }
 
+    handleCSV = async () => {
+        const csvData = this.state.items;
+    }
+
+    getDownloadData = async () => {
+
+        let donwloadQuery = null;
+        if (this.state.keyword === '') {
+            donwloadQuery = db.collection("members")
+                .orderBy('createdAt', 'desc');
+        } else {
+            donwloadQuery = db.collection("members")
+                .where('keywords', 'array-contains-any', [this.state.keyword])
+                .orderBy('createdAt', 'desc');
+        }
+
+        const snapshot = await donwloadQuery.get();
+        let docs = [];
+        snapshot.docs.map(doc => {
+            docs.push({
+                docId: doc.data().docId,
+                name: doc.data().name,
+                datetime: moment(doc.data().createdAt.seconds * 1000).format('YYYY-MM-DD hh:mm:ss')
+            });
+        })
+
+        await this.setState({ downloadItems: docs }, () => {
+            this.csvLink.current.link.click();
+        });
+    }
+
     render() {
         // console.log(this.state);
         return (
@@ -194,6 +230,13 @@ class App extends React.Component {
                     keyword:<input type="text" name="keyword" value={this.state.keyword} onChange={this.changeText} />
                     <button onClick={this.handleSearch}>検索</button>
                     <button onClick={this.handleReset}>リセット</button>
+                    <button onClick={this.getDownloadData} style={{ marginLeft: 30 }}>CSV Download</button>
+                    <CSVLink
+                        data={this.state.downloadItems}
+                        filename="data.csv"
+                        ref={this.csvLink}
+                        target="_blank"
+                    />
                 </div>
                 <table border="1">
                     <tbody>
